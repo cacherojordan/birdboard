@@ -25,7 +25,7 @@ class ProjectsController extends Controller
      */
     public function index(): View
     {
-        $projects = auth()->user()->projects;
+        $projects = $this->getAuthUser()->projects;
 
         return view('projects.index', ['projects' => $projects]);
     }
