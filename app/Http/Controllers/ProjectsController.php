@@ -2,64 +2,81 @@
 
 namespace App\Http\Controllers;
 
+use App\Foundation\Redirect\RedirectInterface;
+use App\Foundation\Validation\ValidatorInterface;
 use App\Project;
-use Illuminate\View\View;
+use Illuminate\Contracts\View\Factory as ViewInterface;
+use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class ProjectsController extends Controller
 {
     /**
      * Show the create form.
      *
-     * @return View
+     * @param \Illuminate\Contracts\View\Factory $view
+     *
+     * @return \Illuminate\Contracts\View\View
      */
-    public function create(): View
+    public function create(ViewInterface $view): View
     {
-        return view('projects.create');
+        return $view->make('projects.create');
     }
 
     /**
      * List of all projects.
      *
-     * @return \Illuminate\View\View
+     * @param \Illuminate\Contracts\View\Factory $view
+     *
+     * @return \Illuminate\Contracts\View\View
      */
-    public function index(): View
+    public function index(ViewInterface $view): View
     {
         $projects = $this->getAuthUser()->projects;
 
-        return view('projects.index', ['projects' => $projects]);
+        return $view->make('projects.index', ['projects' => $projects]);
     }
 
     /**
      * Show a single project info.
      *
+     * @param \Illuminate\Contracts\View\Factory $view
      * @param \App\Project $project
      *
-     * @return \Illuminate\View\View
+     * @return \Illuminate\Contracts\View\View
      */
-    public function show(Project $project): View
+    public function show(ViewInterface $view, Project $project): View
     {
-        if (auth()->user()->isNot($project->owner)) {
-            abort(403);
+        if ($this->getAuthUser()->isNot($project->owner)) {
+            throw new NotFoundHttpException();
         }
 
-        return view('projects.show', ['project' => $project]);
+        return $view->make('projects.show', ['project' => $project]);
     }
 
     /**
      * Store a validated project for a user.
      *
+     * @param \App\Foundation\Redirect\RedirectInterface $redirect
+     * @param \Illuminate\Http\Request $request
+     * @param \App\Foundation\Validation\ValidatorInterface $validator
+     *
      * @return \Illuminate\Http\RedirectResponse
      */
-    public function store(): RedirectResponse
-    {
-        $attributes = request()->validate([
+    public function store(
+        RedirectInterface $redirect,
+        Request $request,
+        ValidatorInterface $validator
+    ): RedirectResponse {
+        $attributes = $validator->validate($request->toArray(), [
             'title' => 'required',
             'description' => 'required'
         ]);
 
-        auth()->user()->projects()->create($attributes);
+        $this->getAuthUser()->projects()->create($attributes);
 
-        return redirect('/projects');
+        return $redirect->to('/projects');
     }
 }

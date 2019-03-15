@@ -2,7 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Foundation\Redirect\RedirectInterface;
+use App\Foundation\Validation\ValidatorInterface;
 use App\Project;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
 class ProjectTasksController extends Controller
@@ -16,12 +19,16 @@ class ProjectTasksController extends Controller
      * @return \Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
      * @throws \Illuminate\Validation\ValidationException
      */
-    public function store(Request $request, Project $project)
-    {
-        $this->validator->validate($request->toArray(), ['body' => 'required']);
+    public function store(
+        Project $project,
+        RedirectInterface $redirect,
+        Request $request,
+        ValidatorInterface $validator
+    ): RedirectResponse {
+        $attribute = $validator->validate($request->toArray(), ['body' => 'required']);
 
-        $project->addTask($request->input('body'));
+        $project->addTask($attribute);
 
-        return $this->redirect->to($project->path(), 201);
+        return $redirect->to($project->path(), 201);
     }
 }

@@ -2,38 +2,26 @@
 
 namespace App\Http\Controllers;
 
-use App\Foundation\Redirect\RedirectInterface;
-use App\Foundation\Validation\ValidatorInterface;
 use App\User;
-use Illuminate\Contracts\Auth\Factory;
-use Illuminate\Contracts\Container\Container;
+use Illuminate\Contracts\Auth\Factory as AuthFactory;
 use Illuminate\Routing\Controller as BaseController;
 
 class Controller extends BaseController
 {
-    /** @var \App\Foundation\Validation\ValidatorInterface */
-    protected $validator;
+    /** @var \Illuminate\Contracts\Auth\Factory */
+    protected $authFactory;
 
-    /** @var \App\Foundation\Redirect\RedirectInterface */
-    protected $redirect;
-
-    /** @var \Illuminate\Contracts\Container\Container */
-    protected $container;
-
-    /** @var \App\User */
+    /** @var null|\App\User */
     protected $authUser = null;
 
     /**
      * Controller constructor.
      *
-     * @param \App\Foundation\Validation\ValidatorInterface $validator
-     * @param \App\Foundation\Redirect\RedirectInterface $redirect
+     * @param \Illuminate\Contracts\Auth\Factory $authFactory
      */
-    public function __construct(ValidatorInterface $validator, RedirectInterface $redirect, Container $container)
+    public function __construct(AuthFactory $authFactory)
     {
-        $this->validator = $validator;
-        $this->redirect = $redirect;
-        $this->container = $container;
+        $this->authFactory = $authFactory;
     }
 
     /**
@@ -47,9 +35,6 @@ class Controller extends BaseController
             return $this->authUser;
         }
 
-        /** @var \Illuminate\Contracts\Auth\Factory $authFactory */
-        $authFactory = $this->container->make(Factory::class);
-
-        return $this->authUser = $authFactory->guard()->user();
+        return $this->authUser = $this->authFactory->guard()->user() ?? null;
     }
 }

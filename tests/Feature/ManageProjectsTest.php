@@ -20,6 +20,8 @@ class ManageProjectsTest extends TestCase
     /** @test **/
     public function a_user_can_create_a_project(): void
     {
+        $this->withoutExceptionHandling();
+
         $this->signIn();
 
         $this->get('/projects/create')->assertStatus(200);
@@ -55,7 +57,7 @@ class ManageProjectsTest extends TestCase
 
         $project = factory('App\Project')->create();
 
-        $this->get($project->path())->assertStatus(403);
+        $this->get($project->path())->assertStatus(404);
     }
 
     /** @test */
